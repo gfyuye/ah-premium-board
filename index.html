@@ -19,23 +19,36 @@
         .card h2 { font-size: 1rem; margin: 0 0 2px; color: #333; }
         .card .sub { font-size: 0.75rem; color: #999; margin-bottom: 8px; }
         .card .err { color: #c00; font-size: 0.82rem; padding: 20px 0; }
+        .global-err { color: #c00; background: #fff0f0; border-radius: 8px;
+                      padding: 16px; margin-bottom: 16px; font-size: 0.88rem; }
         canvas { width: 100% !important; }
     </style>
 </head>
 <body>
     <h1>AH 股溢价率看板</h1>
     <div class="meta" id="meta">加载中…</div>
+    <div id="globalErr"></div>
     <div class="grid" id="grid"></div>
 
     <script>
     (async function () {
         const metaEl = document.getElementById('meta');
         const gridEl = document.getElementById('grid');
+        const globalErrEl = document.getElementById('globalErr');
         try {
             const res = await fetch('premium_data.json?t=' + Date.now());
             if (!res.ok) throw new Error('premium_data.json 加载失败');
             const json = await res.json();
             metaEl.textContent = `更新于 ${json.updated}`;
+
+            if (json.error) {
+                globalErrEl.innerHTML = '<div class="global-err">' + json.error + '</div>';
+            }
+
+            if (!json.stocks.length) {
+                gridEl.innerHTML = '<div class="global-err">暂无股票数据</div>';
+                return;
+            }
 
             json.stocks.forEach(function (s, idx) {
                 const card = document.createElement('div');
@@ -51,9 +64,7 @@
 
                 const sub = document.createElement('div');
                 sub.className = 'sub';
-                if (s.error) {
-                    sub.textContent = '';
-                } else {
+                if (!s.error) {
                     sub.textContent = `A ${s.a_code} ${s.a_name} / H ${s.hk_code} ${s.hk_name}`;
                 }
                 card.appendChild(sub);
@@ -89,10 +100,7 @@
                     responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false },
                                tooltip: { callbacks: { label: c => c.parsed.y.toFixed(2) + '%' } } },
-                    scales: {
-                        x: { display: false },
-                        y: { display: false }
-                    },
+                    scales: { x: { display: false }, y: { display: false } },
                     elements: { line: { borderJoinStyle: 'round' } }
                 }
             });
