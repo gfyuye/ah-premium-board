@@ -14,7 +14,6 @@
                      box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
         .back { display: inline-block; margin-bottom: 16px; color: #2563eb;
                 text-decoration: none; font-size: 0.88rem; }
-        .back:hover { text-decoration: underline; }
         .err { color: #c00; padding: 30px; text-align: center; }
     </style>
 </head>
@@ -29,13 +28,12 @@
 
     <script>
     (async function () {
-        const params = new URLSearchParams(window.location.search);
-        const idx = params.get('idx');
+        const code = new URLSearchParams(window.location.search).get('code');
         const titleEl = document.getElementById('title');
         const subEl = document.getElementById('sub');
         const errEl = document.getElementById('err');
 
-        if (idx === null) {
+        if (!code) {
             titleEl.textContent = '缺少参数';
             errEl.style.display = 'block';
             errEl.textContent = '请从看板点击进入';
@@ -43,28 +41,19 @@
         }
 
         try {
-            const res = await fetch('premium_data.json?t=' + Date.now());
-            if (!res.ok) throw new Error('premium_data.json 加载失败');
-            const json = await res.json();
-            const s = json.stocks[parseInt(idx, 10)];
-            if (!s) throw new Error('未找到该股票数据');
-
+            const s = await fetch(`data/${code}.json?t=${Date.now()}`).then(r => r.json());
             titleEl.textContent = s.label + ' AH 溢价率';
             if (s.error) {
-                subEl.textContent = '';
                 errEl.style.display = 'block';
                 errEl.textContent = '数据异常：' + s.error;
                 return;
             }
-            subEl.textContent = `A ${s.a_code} ${s.a_name} / H ${s.hk_code} ${s.hk_name}　·　更新于 ${json.updated}`;
-
-            const labels = s.data.map(d => d.date);
-            const values = s.data.map(d => d.value);
+            subEl.textContent = `A ${s.a_code} ${s.a_name} / H ${s.hk_code} ${s.hk_name}　·　更新于 ${s.updated}`;
 
             new Chart(document.getElementById('chart'), {
                 type: 'line',
-                data: { labels: labels, datasets: [{
-                    label: 'AH 溢价率 (%)', data: values,
+                data: { labels: s.data.map(d => d.date), datasets: [{
+                    label: 'AH 溢价率 (%)', data: s.data.map(d => d.value),
                     borderColor: '#e63946', backgroundColor: 'rgba(230,57,70,0.06)',
                     borderWidth: 2, pointRadius: 0, pointHoverRadius: 4,
                     tension: 0.2, fill: true
