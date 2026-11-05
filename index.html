@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AH 溢价率看板</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+               max-width: 1100px; margin: 32px auto; padding: 0 20px; background: #f5f6f8; }
+        h1 { font-size: 1.3rem; color: #222; margin-bottom: 4px; }
+        .meta { color: #888; font-size: 0.82rem; margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+        .card { background: #fff; border-radius: 10px; padding: 16px 18px 10px;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.07); cursor: pointer;
+                transition: box-shadow .15s, transform .15s; }
+        .card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.12); transform: translateY(-2px); }
+        .card h2 { font-size: 1rem; margin: 0 0 2px; color: #333; }
+        .card .sub { font-size: 0.75rem; color: #999; margin-bottom: 8px; }
+        .card .err { color: #c00; font-size: 0.82rem; padding: 20px 0; }
+        canvas { width: 100% !important; }
+    </style>
+</head>
+<body>
+    <h1>AH 股溢价率看板</h1>
+    <div class="meta" id="meta">加载中…</div>
+    <div class="grid" id="grid"></div>
+
+    <script>
+    (async function () {
+        const metaEl = document.getElementById('meta');
+        const gridEl = document.getElementById('grid');
+        try {
+            const res = await fetch('premium_data.json?t=' + Date.now());
+            if (!res.ok) throw new Error('premium_data.json 加载失败');
+            const json = await res.json();
+            metaEl.textContent = `更新于 ${json.updated}`;
+
+            json.stocks.forEach(function (s, idx) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = function () {
+                    if (s.data && s.data.length) {
+                        window.location.href = 'detail.html?idx=' + idx;
+                    }
+                };
+                const h2 = document.createElement('h2');
+                h2.textContent = s.label;
+                card.appendChild(h2);
+
+                const sub = document.createElement('div');
+                sub.className = 'sub';
+                if (s.error) {
+                    sub.textContent = '';
+                } else {
+                    sub.textContent = `A ${s.a_code} ${s.a_name} / H ${s.hk_code} ${s.hk_name}`;
+                }
+                card.appendChild(sub);
+
+                if (s.error) {
+                    const err = document.createElement('div');
+                    err.className = 'err';
+                    err.textContent = '数据异常：' + s.error;
+                    card.appendChild(err);
+                } else {
+                    const canvas = document.createElement('canvas');
+                    canvas.height = 130;
+                    card.appendChild(canvas);
+                    renderMiniChart(canvas, s.data);
+                }
+                gridEl.appendChild(card);
+            });
+        } catch (e) {
+            metaEl.innerHTML = '<span style="color:#c00">加载失败：' + e.message + '</span>';
+        }
+
+        function renderMiniChart(canvas, data) {
+            const labels = data.map(d => d.date);
+            const values = data.map(d => d.value);
+            new Chart(canvas, {
+                type: 'line',
+                data: { labels: labels, datasets: [{
+                    data: values, borderColor: '#e63946',
+                    backgroundColor: 'rgba(230,57,70,0.06)',
+                    borderWidth: 1.5, pointRadius: 0, tension: 0.2, fill: true
+                }]},
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false },
+                               tooltip: { callbacks: { label: c => c.parsed.y.toFixed(2) + '%' } } },
+                    scales: {
+                        x: { display: false },
+                        y: { display: false }
+                    },
+                    elements: { line: { borderJoinStyle: 'round' } }
+                }
+            });
+        }
+    })();
+    </script>
+</body>
+</html>
