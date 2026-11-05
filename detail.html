@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AH 溢价率详情</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+               max-width: 1000px; margin: 32px auto; padding: 0 20px; background: #f5f6f8; }
+        h1 { font-size: 1.3rem; color: #222; margin-bottom: 2px; }
+        .sub { color: #888; font-size: 0.85rem; margin-bottom: 18px; }
+        .chart-box { background: #fff; border-radius: 10px; padding: 20px;
+                     box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+        .back { display: inline-block; margin-bottom: 16px; color: #2563eb;
+                text-decoration: none; font-size: 0.88rem; }
+        .back:hover { text-decoration: underline; }
+        .err { color: #c00; padding: 30px; text-align: center; }
+    </style>
+</head>
+<body>
+    <a class="back" href="index.html">← 返回看板</a>
+    <h1 id="title">加载中…</h1>
+    <div class="sub" id="sub"></div>
+    <div class="chart-box">
+        <canvas id="chart"></canvas>
+        <div id="err" class="err" style="display:none"></div>
+    </div>
+
+    <script>
+    (async function () {
+        const params = new URLSearchParams(window.location.search);
+        const idx = params.get('idx');
+        const titleEl = document.getElementById('title');
+        const subEl = document.getElementById('sub');
+        const errEl = document.getElementById('err');
+
+        if (idx === null) {
+            titleEl.textContent = '缺少参数';
+            errEl.style.display = 'block';
+            errEl.textContent = '请从看板点击进入';
+            return;
+        }
+
+        try {
+            const res = await fetch('premium_data.json?t=' + Date.now());
+            if (!res.ok) throw new Error('premium_data.json 加载失败');
+            const json = await res.json();
+            const s = json.stocks[parseInt(idx, 10)];
+            if (!s) throw new Error('未找到该股票数据');
+
+            titleEl.textContent = s.label + ' AH 溢价率';
+            if (s.error) {
+                subEl.textContent = '';
+                errEl.style.display = 'block';
+                errEl.textContent = '数据异常：' + s.error;
+                return;
+            }
+            subEl.textContent = `A ${s.a_code} ${s.a_name} / H ${s.hk_code} ${s.hk_name}　·　更新于 ${json.updated}`;
+
+            const labels = s.data.map(d => d.date);
+            const values = s.data.map(d => d.value);
+
+            new Chart(document.getElementById('chart'), {
+                type: 'line',
+                data: { labels: labels, datasets: [{
+                    label: 'AH 溢价率 (%)', data: values,
+                    borderColor: '#e63946', backgroundColor: 'rgba(230,57,70,0.06)',
+                    borderWidth: 2, pointRadius: 0, pointHoverRadius: 4,
+                    tension: 0.2, fill: true
+                }]},
+                options: {
+                    responsive: true, maintainAspectRatio: true,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { display: false },
+                               tooltip: { callbacks: { label: c => '溢价率: ' + c.parsed.y.toFixed(2) + '%' } } },
+                    scales: {
+                        x: { ticks: { maxTicksLimit: 12, maxRotation: 45 }, grid: { display: false } },
+                        y: { title: { display: true, text: '溢价率 (%)' }, grid: { color: '#eee' } }
+                    }
+                }
+            });
+        } catch (e) {
+            titleEl.textContent = '加载失败';
+            errEl.style.display = 'block';
+            errEl.textContent = e.message;
+        }
+    })();
+    </script>
+</body>
+</html>
