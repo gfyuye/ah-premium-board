@@ -1,22 +1,30 @@
 [
   {
     "label": "光大银行",
-    "a_input": "601818",
-    "hk_input": "06818"
+    "a_code": "601818",
+    "hk_code": "06818",
+    "a_name": "光大银行",
+    "hk_name": "光大银行"
   },
   {
     "label": "工商银行",
-    "a_input": "工商银行",
-    "hk_input": "01398"
+    "a_code": "601398",
+    "hk_code": "01398",
+    "a_name": "工商银行",
+    "hk_name": "工商银行"
   },
   {
     "label": "中国广核",
-    "a_input": "003816",
-    "hk_input": "中广核电力"
+    "a_code": "003816",
+    "hk_code": "01816",
+    "a_name": "中国广核",
+    "hk_name": "中广核电力"
   },
   {
     "label": "招商银行",
-    "a_input": "600036",
-    "hk_input": "03968"
+    "a_code": "600036",
+    "hk_code": "03968",
+    "a_name": "招商银行",
+    "hk_name": "招商银行"
   }
 ]
