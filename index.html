@@ -14,12 +14,13 @@
         @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
         .card { background: #fff; border-radius: 10px; padding: 16px 18px 10px;
                 box-shadow: 0 1px 4px rgba(0,0,0,0.07); cursor: pointer;
-                transition: box-shadow .15s, transform .15s; }
+                transition: box-shadow .15s, transform .15s; overflow: hidden; }
         .card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.12); transform: translateY(-2px); }
         .card h2 { font-size: 1rem; margin: 0 0 2px; color: #333; }
         .card .sub { font-size: 0.75rem; color: #999; margin-bottom: 8px; }
         .card .err { color: #c00; font-size: 0.82rem; padding: 20px 0; }
-        canvas { width: 100% !important; }
+        .chart-wrap { position: relative; height: 130px; }
+        canvas { width: 100% !important; height: 100% !important; }
     </style>
 </head>
 <body>
@@ -66,9 +67,11 @@
                         err.textContent = '数据异常：' + s.error;
                         card.appendChild(err);
                     } else if (s.data && s.data.length) {
+                        const wrap = document.createElement('div');
+                        wrap.className = 'chart-wrap';
                         const canvas = document.createElement('canvas');
-                        canvas.height = 130;
-                        card.appendChild(canvas);
+                        wrap.appendChild(canvas);
+                        card.appendChild(wrap);
                         renderMiniChart(canvas, s.data);
                         card.onclick = () => { window.location.href = 'detail.html?code=' + m.a_code; };
                     } else {
@@ -94,7 +97,8 @@
                     borderWidth: 1.5, pointRadius: 0, tension: 0.2, fill: true
                 }]},
                 options: {
-                    responsive: true, maintainAspectRatio: false,
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: { legend: { display: false },
                                tooltip: { callbacks: { label: c => c.parsed.y.toFixed(2) + '%' } } },
                     scales: { x: { display: false }, y: { display: false } }
