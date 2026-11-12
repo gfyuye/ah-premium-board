@@ -4,7 +4,7 @@
   "hk_code": "03968",
   "a_name": "招商银行",
   "hk_name": "招商银行",
-  "updated": "2026-11-11 16:07:37",
+  "updated": "2026-11-12 16:46:37",
   "error": "'>=' not supported between instances of 'datetime.date' and 'str'",
   "data": [
     {
