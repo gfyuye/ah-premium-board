@@ -4,7 +4,7 @@
   "hk_code": "01816",
   "a_name": "中国广核",
   "hk_name": "中广核电力",
-  "updated": "2026-11-12 16:46:37",
+  "updated": "2026-11-13 16:17:01",
   "error": "'>=' not supported between instances of 'datetime.date' and 'str'",
   "data": [
     {
